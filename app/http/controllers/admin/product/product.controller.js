@@ -9,6 +9,7 @@ const createHttpError = require("http-errors");
 // const { CommentController } = require("../../comment/comment.controller");
 const ObjectId = mongoose.Types.ObjectId;
 const { CategoryModel } = require("../../../../models/category");
+const { FoodGroupSchemaModel } = require("../../../../models/foodGroups");
 const { UserModel } = require("../../../../models/user");
 const { ProductModel } = require("../../../../models/product");
 const {
@@ -17,8 +18,6 @@ const {
 } = require("../../../validators/admin/product.schema");
 
 class ProductController extends Controller {
-
-  
   async addNewProduct(req, res) {
     // const seller = req.user._id;
     await addProductSchema.validateAsync(req.body);
@@ -27,13 +26,11 @@ class ProductController extends Controller {
       description,
       slug,
       imageLink,
-      brand,
-      tags,
       foodGroup,
+      category,
       price,
       discount = 0,
       offPrice,
-      countInStock,
     } = req.body;
 
     const product = await ProductModel.create({
@@ -41,13 +38,11 @@ class ProductController extends Controller {
       description,
       slug,
       imageLink,
-      brand,
-      tags,
+      category,
       foodGroup,
       price,
       discount,
       offPrice,
-      countInStock,
     });
     if (!product?._id)
       throw createHttpError.InternalServerError("محصول ثبت نشد");
@@ -62,8 +57,7 @@ class ProductController extends Controller {
   async getListOfProducts(req, res) {
     let dbQuery = {};
     const user = req.user;
-    const { search, category, sort, type } = req.query;
-    // console.log({ category, sort, type });
+    const { search, category, sort, foodGroup } = req.query;
     if (search) dbQuery["$text"] = { $search: search };
     if (category) {
       const categories = category.split(",");
@@ -74,6 +68,19 @@ class ProductController extends Controller {
       }
       dbQuery["category"] = {
         $in: categoryIds,
+      };
+    }
+    if (foodGroup) {
+      const foodGroups = foodGroup.split(",");
+      const foodGroupIds = [];
+      for (const item of foodGroups) {
+        const { _id } = await FoodGroupSchemaModel.findOne({
+          englishTitle: item,
+        });
+        foodGroupIds.push(_id);
+      }
+      dbQuery["foodGroup"] = {
+        $in: foodGroupIds,
       };
     }
 
@@ -88,6 +95,7 @@ class ProductController extends Controller {
     const products = await ProductModel.find(dbQuery, {
       reviews: 0,
     })
+      .populate([{ path: "foodGroup", select: { title: 1, englishTitle: 1 } }])
       .populate([{ path: "category", select: { title: 1, englishTitle: 1 } }])
       .sort(sortQuery);
 
@@ -136,6 +144,7 @@ class ProductController extends Controller {
       },
     });
   }
+
   async getOneProductBySlug(req, res) {
     const { slug } = req.params;
     const product = await ProductModel.findOne({ slug }).populate([
@@ -160,6 +169,7 @@ class ProductController extends Controller {
       },
     });
   }
+
   async changeProductDiscountStatus(req, res) {
     const { id } = req.params;
     await this.findProductById(id);
@@ -256,6 +266,7 @@ class ProductController extends Controller {
       },
     });
   }
+
   async findProductById(id) {
     if (!mongoose.isValidObjectId(id))
       throw createHttpError.BadRequest("شناسه محصول ارسال شده صحیح نمیباشد");

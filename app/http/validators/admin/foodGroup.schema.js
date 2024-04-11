@@ -16,9 +16,6 @@ const addFoodGroupSchema = Joi.object({
     .required()
     .regex(MongoIDPattern)
     .error(createHttpError.BadRequest("دسته بندی مورد نظر  صحیح نمی باشد")),
-  brand: Joi.string()
-    .required()
-    .error(createHttpError.BadRequest("برند محصول صحیح نمی باشد.")),
 
   englishTitle: Joi.string()
     .required()

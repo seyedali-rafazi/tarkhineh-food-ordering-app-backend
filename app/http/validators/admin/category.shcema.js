@@ -24,9 +24,9 @@ const addCategorySchema = Joi.object({
     .required()
     .min(3)
     .max(100)
-    .valid("foodgroup", "post", "comment", "ticket")
+    .valid("foodGroup","category", "post", "comment", "ticket")
     .error(createHttpError.BadRequest("نوع دسته بندی صحیح نمی باشد")),
-  parent: Joi.string()
+    parentId: Joi.string()
     .allow("")
     .pattern(MongoIDPattern)
     .error(createHttpError.BadRequest("شناسه ارسال شده صحیح نمیباشد")),

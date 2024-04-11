@@ -7,7 +7,6 @@ const FoodGroupSchema = new mongoose.Schema(
     description: { type: String, required: true },
     englishTitle: { type: String, required: true, unique: true },
     category: { type: ObjectId, ref: "Category", required: true },
-    brand: { type: String, required: true },
     type: {
       type: String,
       enum: ["product", "comment", "post", "ticket", "foodGroup"],
@@ -16,7 +15,7 @@ const FoodGroupSchema = new mongoose.Schema(
     },
     foodParentId: {
       type: ObjectId,
-      ref: "FoodGroups",
+      ref: "FoodGroup",
       default: null,
     },
   },
@@ -25,6 +24,9 @@ const FoodGroupSchema = new mongoose.Schema(
   }
 );
 
+FoodGroupSchema.index({ title: "text", englishTitle: "text" });
+
+
 module.exports = {
-  FoodGroupSchemaModel: mongoose.model("FoodGroups", FoodGroupSchema),
+  FoodGroupSchemaModel: mongoose.model("FoodGroup", FoodGroupSchema),
 };

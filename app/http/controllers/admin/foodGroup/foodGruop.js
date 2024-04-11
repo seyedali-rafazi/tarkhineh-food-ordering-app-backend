@@ -23,7 +23,7 @@ class FoodGroupController extends Controller {
   }
 
   async addNewFoodGroup(req, res) {
-    const { title, englishTitle, description, type, parent, category, brand } =
+    const { title, englishTitle, description, type, parent, category } =
       await addFoodGroupSchema.validateAsync(req.body);
     await this.findFoodGroupWithTitle(englishTitle);
     const foodGroup = await FoodGroupSchemaModel.create({
@@ -33,7 +33,6 @@ class FoodGroupController extends Controller {
       type,
       parent,
       category,
-      brand,
     });
 
     if (!foodGroup) throw createHttpError.InternalServerError("خطای داخلی");

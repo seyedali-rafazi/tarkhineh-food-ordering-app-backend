@@ -8,8 +8,8 @@ const CategorySchema = new mongoose.Schema(
     description: { type: String, required: true, trim: true, lowercase: true },
     type: {
       type: String,
-      enum: ["foodGroup", "comment", "post", "ticket"],
-      default: "foodGroup",
+      enum: ["foodGroup","comment", "post", "ticket"],
+      default: "foodgroup",
       required: true,
     },
     parentId: {

@@ -14,34 +14,26 @@ const addProductSchema = Joi.object({
   slug: Joi.string()
     .required()
     .error(createError.BadRequest("اسلاگ ارسال شده صحیح نمیباشد")),
-  brand: Joi.string()
-    .required()
-    .error(createError.BadRequest("برند محصول صحیح نمی باشد.")),
-  countInStock: Joi.number()
-    .required()
-    .error(createError.BadRequest("موجودی محصول صحیح نمی باشد.")),
   imageLink: Joi.string()
     .required()
     .error(createError.BadRequest("لینک عکس دوره صحیح نمیباشد")),
-  tags: Joi.array()
-    .min(0)
-    .max(20)
-    .error(createError.BadRequest("برچسب ها نمیتواند بیشتر از 20 ایتم باشد")),
-    
   foodGroup: Joi.string()
     .required()
     .regex(MongoIDPattern)
     .error(createError.BadRequest("دسته بندی غذا نظر  صحیح نمی باشد")),
-
-  offPrice: Joi.number().error(
-    createError.BadRequest("قیمت وارد شده صحیح نمیباشد")
-  ),
+  category: Joi.string()
+    .required()
+    .regex(MongoIDPattern)
+    .error(createError.BadRequest("دسته بندی غذا نظر  صحیح نمی باشد")),
   price: Joi.number()
     .required()
     .error(createError.BadRequest("قیمت وارد شده صحیح نمیباشد")),
   discount: Joi.number()
     .allow(0)
     .error(createError.BadRequest("تخفیف وارد شده صحیح نمیباشد")),
+  offPrice: Joi.number()
+    .allow(0)
+    .error(createError.BadRequest("قیمت تخفیف خورده وارد شده صحیح نمیباشد")),
 });
 
 const changeCourseDiscountSchema = Joi.object({

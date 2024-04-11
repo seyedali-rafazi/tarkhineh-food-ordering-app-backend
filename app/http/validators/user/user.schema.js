@@ -37,10 +37,8 @@ const updateProfileSchema = Joi.object({
   name: Joi.string()
     .min(5)
     .max(50)
-    .required()
     .error(createHttpError.BadRequest("نام کاربری وارد شده صحیح نمی باشد")),
   email: Joi.string()
-    .required()
     .email()
     .error(createHttpError.BadRequest("ایمیل وارد شده صحیح نمی باشد")),
   phoneNumber: Joi.string()
@@ -51,6 +49,10 @@ const updateProfileSchema = Joi.object({
     .max(30)
     .allow("")
     .error(createHttpError.BadRequest("حوزه تخصصی صحیح نمی باشد.")),
+  address: Joi.string()
+    .min(5)
+    .max(100)
+    .error(createHttpError.BadRequest("آدرس وارد شده صحیح نمی باشد")),
 });
 
 module.exports = {

@@ -31,7 +31,6 @@ const UserSchema = new mongoose.Schema(
     Products: [{ type: ObjectId, ref: "Product" }],
     role: { type: String, default: "USER" },
     cart: { type: CartSchema },
-    likedProducts: [{ type: ObjectId, ref: "Product" }],
   },
   {
     timestamps: true,

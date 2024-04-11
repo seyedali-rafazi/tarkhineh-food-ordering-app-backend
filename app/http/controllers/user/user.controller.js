@@ -185,6 +185,7 @@ class userAuthController extends Controller {
       },
     });
   }
+
   async refreshToken(req, res) {
     const userId = await verifyRefreshToken(req);
     const user = await UserModel.findById(userId);

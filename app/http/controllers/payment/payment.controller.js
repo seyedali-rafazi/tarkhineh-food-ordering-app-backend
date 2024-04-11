@@ -49,13 +49,6 @@ class PaymentController extends Controller {
       }
     );
 
-    // decrease products inStock :
-    await ProductModel.updateMany(
-      { _id: { $in: cart?.payDetail?.productIds } },
-      {
-        $inc: { countInStock: -1 },
-      }
-    );
     // update Coupon
     if (cart?.coupon)
       await CouponModel.updateOne(
