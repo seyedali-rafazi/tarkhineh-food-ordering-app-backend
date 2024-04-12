@@ -23,6 +23,7 @@ const {
   updateProfileSchema,
 } = require("../../validators/user/user.schema");
 const { PaymentModel } = require("../../../models/payment");
+const { ProductModel } = require("../../../models/product");
 
 class userAuthController extends Controller {
   constructor() {
@@ -200,7 +201,9 @@ class userAuthController extends Controller {
   }
   async getUserProfile(req, res) {
     const { _id: userId } = req.user;
-    const user = await UserModel.findById(userId, { password: 0 });
+    const user = await UserModel.findById(userId, { password: 0 }).populate([
+      { path: "favoriteProduct", select: { title: 1} },
+    ]);
     const cart = (await getUserCartDetail(userId))?.[0];
     const payments = await PaymentModel.find({ user: userId });
 
@@ -208,6 +211,41 @@ class userAuthController extends Controller {
       statusCode: HttpStatus.OK,
       data: {
         user,
+      },
+    });
+  }
+
+  async setFavoriteProduct(req, res) {
+    const { id: productId } = req.params;
+    const user = req.user;
+
+    // Validate if the product exists
+    const product = await ProductModel.findById(productId);
+    if (!product) {
+      throw createHttpError.NotFound("محصولی با این شناسه یافت نشد");
+    }
+
+    // Update the user's favorite product
+    if (user.favoriteProduct && user.favoriteProduct.includes(productId)) {
+      // Remove the product from the user's favorite list
+      user.favoriteProduct = user.favoriteProduct.filter(
+        (id) => id.toString() !== productId
+      );
+    } else {
+      // Add the product to the user's favorite list
+      user.favoriteProduct.push(productId);
+    }
+
+    // Save the updated user document
+    await user.save();
+
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      data: {
+        message: "محصول مورد علاقه با موفقیت تنظیم شد",
+        favoriteProduct: {
+          productId,
+        },
       },
     });
   }

@@ -35,6 +35,9 @@ router.get(
   expressAsyncHandler(UserAuthController.getUserProfile)
 );
 
+// New route for setting the user's favorite product
+router.post("/set-favorite-product/:id", verifyAccessToken, expressAsyncHandler(UserAuthController.setFavoriteProduct));
+
 router.post("/logout", expressAsyncHandler(UserAuthController.logout));
 
 module.exports = {

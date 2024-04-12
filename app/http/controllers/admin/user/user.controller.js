@@ -40,6 +40,8 @@ class UserController extends Controller {
       },
     });
   }
+
+  
   async userProfile(req, res) {
     const { userId } = req.params;
     const user = await UserModel.findById(userId, { otp: 0 });

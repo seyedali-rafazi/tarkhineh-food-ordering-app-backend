@@ -18,6 +18,7 @@ const UserSchema = new mongoose.Schema(
     biography: { type: String, default: null },
     address: { type: String, default: null },
     likedProducts: [{ type: ObjectId, ref: "Product" }],
+    favoriteProduct: [{ type: ObjectId, ref: "Product" }], 
     email: { type: String, lowercase: true, trim: true },
     phoneNumber: { type: String, trim: true },
     password: { type: String },
