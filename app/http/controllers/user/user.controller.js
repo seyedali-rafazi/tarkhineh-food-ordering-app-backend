@@ -202,7 +202,10 @@ class userAuthController extends Controller {
   async getUserProfile(req, res) {
     const { _id: userId } = req.user;
     const user = await UserModel.findById(userId, { password: 0 }).populate([
-      { path: "favoriteProduct", select: { title: 1} },
+      {
+        path: "favoriteProduct",
+        select: { title: 1, price: 1, offPrice: 1, imageLink: 1 },
+      },
     ]);
     const cart = (await getUserCartDetail(userId))?.[0];
     const payments = await PaymentModel.find({ user: userId });
@@ -211,6 +214,8 @@ class userAuthController extends Controller {
       statusCode: HttpStatus.OK,
       data: {
         user,
+        cart,
+        payments,
       },
     });
   }
@@ -239,10 +244,17 @@ class userAuthController extends Controller {
     // Save the updated user document
     await user.save();
 
+    let message;
+    if (user.favoriteProduct.includes(productId)) {
+      message = "به لیست مورد علاقتون اضافه شد";
+    } else {
+      message = "از لیست مورد علاقه شما خارج شد";
+    }
+
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,
       data: {
-        message: "محصول مورد علاقه با موفقیت تنظیم شد",
+        message,
         favoriteProduct: {
           productId,
         },

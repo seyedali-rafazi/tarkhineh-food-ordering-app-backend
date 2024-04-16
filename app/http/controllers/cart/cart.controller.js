@@ -121,6 +121,44 @@ class CartController extends Controller {
       },
     });
   }
+  async deleteFromCart(req, res) {
+    const userId = req.user._id;
+    const { productId } = req.body;
+    const removedProduct = await this.checkExistProduct(productId);
+    const product = await this.findProductInCart(userId, productId);
+  
+    if (!product) {
+      throw createHttpError.BadRequest(
+        `${removedProduct.title} در سبد خرید شما وجود ندارد`
+      );
+    }
+  
+    const newCart = await UserModel.findOneAndUpdate(
+      { _id: userId, "cart.products.productId": productId },
+      { $pull: { "cart.products": { productId } } },
+      { new: true }
+    );
+  
+    if (newCart.modifiedCount == 0) {
+      throw createHttpError.InternalServerError("محصول از سبد خرید حذف نشد");
+    }
+  
+    const message = "محصول از سبد خرید حذف شد";
+  
+    if (newCart.cart.products.length === 0) {
+      await UserModel.updateOne(
+        { _id: userId },
+        { $unset: { "cart.coupon": 1 } }
+      );
+    }
+  
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      data: {
+        message: `${removedProduct.title} ${message}`,
+      },
+    });
+  }
   async addCouponToCart(req, res) {
     const { couponCode } = req.body;
     const user = req.user;

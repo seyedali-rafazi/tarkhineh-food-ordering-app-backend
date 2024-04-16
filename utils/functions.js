@@ -145,10 +145,12 @@ async function getUserCartDetail(userId) {
           _id: 1,
           slug: 1,
           title: 1,
+          description:1,
           icon: 1,
           discount: 1,
           price: 1,
           offPrice: 1,
+          discount:1,
           imageLink: 1,
         },
       },
@@ -164,25 +166,18 @@ async function getUserCartDetail(userId) {
                 "$$product",
                 {
                   quantity: {
-                    $let: {
-                      vars: {
-                        productId: "$$product._id",
-                      },
-                      in: {
-                        $arrayElemAt: [
-                          {
-                            $filter: {
-                              input: "$cart.products",
-                              as: "item",
-                              cond: {
-                                $eq: ["$$item.productId", "$$productId"],
-                              },
-                            },
+                    $arrayElemAt: [
+                      {
+                        $filter: {
+                          input: "$cart.products",
+                          as: "item",
+                          cond: {
+                            $eq: ["$$item.productId", "$$product._id"],
                           },
-                          0,
-                        ],
+                        },
                       },
-                    },
+                      0,
+                    ],
                   },
                 },
               ],
@@ -194,116 +189,87 @@ async function getUserCartDetail(userId) {
     {
       $addFields: {
         discountDetail: {
-          $let: {
-            vars: {
-              coupon: "$coupon",
-              productDetail: "$productDetail",
-            },
-            in: {
-              $cond: {
-                if: {
-                  $or: [
-                    { $not: ["$coupon.isActive"] },
-                    {
-                      $gte: ["$coupon.usageCount", "$coupon.usageLimit"],
-                    },
-                    {
-                      $lt: [
-                        {
-                          $dateFromString: {
-                            dateString: "$coupon.expireDate",
-                          },
-                        },
-                        new Date(),
-                      ],
-                    },
-                  ],
-                },
-                then: null,
-                else: {
-                  newProductDetail: {
-                    $map: {
-                      input: "$$productDetail",
-                      as: "product",
-                      in: {
-                        $cond: {
-                          if: {
-                            $gt: ["$$product.discount", 0],
-                          },
-                          then: "$$product",
-                          else: {
-                            $cond: {
-                              if: {
-                                $in: ["$$product._id", "$coupon.productIds"],
-                              },
-                              then: {
-                                $cond: {
-                                  if: {
-                                    $eq: ["$coupon.type", "fixedProduct"],
-                                  },
-                                  then: {
-                                    $cond: {
-                                      if: {
-                                        $lt: [
-                                          "$$product.price",
-                                          "$coupon.amount",
-                                        ],
-                                      },
-                                      then: "$$product",
-                                      else: {
-                                        $mergeObjects: [
-                                          "$$product",
-                                          {
-                                            offPrice: {
-                                              $subtract: [
-                                                "$$product.price",
-                                                "$coupon.amount",
-                                              ],
-                                            },
-                                          },
-                                        ],
-                                      },
+          coupon: {
+            $cond: [
+              {
+                $or: [
+                  { $not: ["$coupon.isActive"] },
+                  { $gte: ["$coupon.usageCount", "$coupon.usageLimit"] },
+                  {
+                    $lt: [
+                      { $dateFromString: { dateString: "$coupon.expireDate" } },
+                      new Date(),
+                    ],
+                  },
+                ],
+              },
+              null,
+              {
+                code: "$coupon.code",
+                _id: "$coupon._id",
+              },
+            ],
+          },
+          newProductDetail: {
+            $map: {
+              input: "$productDetail",
+              as: "product",
+              in: {
+                $cond: [
+                  { $gt: ["$$product.discount", 0] },
+                  "$$product",
+                  {
+                    $cond: [
+                      { $in: ["$$product._id", ["$coupon.productIds"]] },
+
+                      {
+                        $cond: [
+                          { $eq: ["$coupon.type", "fixedProduct"] },
+                          {
+                            $cond: [
+                              { $lt: ["$$product.price", "$coupon.amount"] },
+                              "$$product",
+                              {
+                                $mergeObjects: [
+                                  "$$product",
+                                  {
+                                    offPrice: {
+                                      $subtract: [
+                                        "$$product.price",
+                                        "$coupon.amount",
+                                      ],
                                     },
                                   },
-                                  else: {
-                                    $mergeObjects: [
-                                      "$$product",
+                                ],
+                              },
+                            ],
+                          },
+                          {
+                            $mergeObjects: [
+                              "$$product",
+                              {
+                                offPrice: {
+                                  $trunc: {
+                                    $multiply: [
+                                      "$$product.price",
                                       {
-                                        offPrice: {
-                                          $trunc: {
-                                            $multiply: [
-                                              "$$product.price",
-                                              {
-                                                $subtract: [
-                                                  1,
-                                                  {
-                                                    $divide: [
-                                                      "$coupon.amount",
-                                                      100,
-                                                    ],
-                                                  },
-                                                ],
-                                              },
-                                            ],
-                                          },
-                                        },
+                                        $subtract: [
+                                          1,
+                                          { $divide: ["$coupon.amount", 100] },
+                                        ],
                                       },
                                     ],
                                   },
                                 },
                               },
-                              else: "$$product",
-                            },
+                            ],
                           },
-                        },
+                        ],
                       },
-                    },
+                      "$$product",
+                    ],
                   },
-                  coupon: {
-                    code: "$coupon.code",
-                    _id: "$coupon._id",
-                  },
-                },
+                ],
               },
             },
           },
@@ -313,101 +279,107 @@ async function getUserCartDetail(userId) {
     {
       $addFields: {
         payDetail: {
-          $let: {
-            vars: {
-              productDetail: "$discountDetail.newProductDetail",
-              userName: "$name",
-            },
-            in: {
-              totalOffAmount: {
-                $sum: {
-                  $map: {
-                    input: "$$productDetail",
-                    as: "product",
-                    in: {
-                      $multiply: [
-                        {
-                          $subtract: ["$$product.price", "$$product.offPrice"],
-                        },
-                        "$$product.quantity",
-                      ],
-                    },
-                  },
-                },
-              },
-              totalPrice: {
-                $sum: {
-                  $map: {
-                    input: "$$productDetail",
-                    as: "product",
-                    in: {
-                      $multiply: ["$$product.offPrice", "$$product.quantity"],
-                    },
-                  },
-                },
-              },
-              totalGrossPrice: {
-                $sum: {
-                  $map: {
-                    input: "$$productDetail",
-                    as: "product",
-                    in: {
-                      $multiply: ["$$product.price", "$$product.quantity"],
-                    },
-                  },
-                },
-              },
-              orderItems: {
-                $map: {
-                  input: "$$productDetail",
-                  as: "product",
-                  in: {
-                    price: "$$product.offPrice",
-                    product: "$$product._id",
-                  },
-                },
-              },
-              productIds: {
-                $map: {
-                  input: "$$productDetail",
-                  as: "product",
-                  in: "$$product._id",
-                },
-              },
-              description: {
-                $concat: [
-                  {
-                    $reduce: {
-                      input: "$$productDetail",
-                      initialValue: "",
-                      in: {
-                        $concat: [
-                          "$$value",
-                          {
-                            $cond: {
-                              if: { $eq: ["$$value", ""] },
-                              then: "",
-                              else: " - ",
-                            },
-                          },
-                          "$$this.title",
-                        ],
-                      },
-                    },
-                  },
-                  " | ",
-                  "$$userName",
-                ],
+          // totalOffAmount: {
+          //   $sum: {
+          //     $map: {
+          //       input: "$discountDetail.newProductDetail",
+          //       as: "product",
+          //       in: {
+          //         $multiply: [
+          //           { $toDouble: { $ifNull: ["$$product.price", "0"] } },
+          //           { $toDouble: { $ifNull: ["$$product.quantity", "0"] } },
+          //           {
+          //             $cond: {
+          //               if: { $eq: ["$$product.offPrice", null] },
+          //               then: 0,
+          //               else: {
+          //                 $subtract: [
+          //                   1,
+          //                   {
+          //                     $divide: [
+          //                       { $toDouble: "$$product.offPrice" },
+          //                       { $toDouble: "$$product.price" },
+          //                     ],
+          //                   },
+          //                 ],
+          //               },
+          //             },
+          //           },
+          //         ],
+          //       },
+          //     },
+          //   },
+          // },
+          // totalPrice: {
+          //   $sum: {
+          //     $map: {
+          //       input: "$discountDetail.newProductDetail",
+          //       as: "product",
+          //       in: {
+          //         $multiply: [
+          //           { $toDouble: { $ifNull: ["$$product.offPrice", "0"] } },
+          //           { $toDouble: { $ifNull: ["$$product.quantity", "0"] } },
+          //         ],
+          //       },
+          //     },
+          //   },
+          // },
+          // totalGrossPrice: {
+          //   $sum: {
+          //     $map: {
+          //       input: "$discountDetail.newProductDetail",
+          //       as: "product",
+          //       in: {
+          //         $multiply: [
+          //           { $toDouble: { $ifNull: ["$$product.price", "0"] } },
+          //           { $toDouble: { $ifNull: ["$$product.quantity", "0"] } },
+          //         ],
+          //       },
+          //     },
+          //   },
+          // },
+          orderItems: {
+            $map: {
+              input: "$discountDetail.newProductDetail",
+              as: "product",
+              in: {
+                price: {
+                  $cond: {
+                    if: { $ne: ["$$product.offPrice", 0] }, // Check if offPrice is not zero
+                    then: "$$product.offPrice", // If not zero, use offPrice
+                    else: "$$product.price" // If zero, use regular price
+                  }
+                },                product: "$$product._id",
               },
             },
           },
+          productIds: {
+            $map: {
+              input: "$discountDetail.newProductDetail",
+              as: "product",
+              in: "$$product._id",
+            },
+          },
+          description: {
+            $concat: [
+              {
+                $reduce: {
+                  input: "$discountDetail.newProductDetail",
+                  initialValue: "",
+                  in: {
+                    $concat: [
+                      "$$value",
+                      { $cond: [{ $eq: ["$$value", ""] }, "", " - "] },
+                      "$$this.title",
+                    ],
+                  },
+                },
+              },
+              " | ",
+              "$name",
+            ],
+          },
         },
-      },
-    },
-    {
-      $set: {
-        productDetail: "$discountDetail.newProductDetail",
-        coupon: "$discountDetail.coupon",
       },
     },
     {

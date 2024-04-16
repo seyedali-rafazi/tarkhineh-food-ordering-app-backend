@@ -4,9 +4,10 @@ const router = require("express").Router();
 
 router.post("/add", expressAsyncHandler(CartController.addToCart));
 router.post("/remove", expressAsyncHandler(CartController.removeFromCart));
+router.post("/deleteProduct", expressAsyncHandler(CartController.deleteFromCart));
 router.post("/coupon", expressAsyncHandler(CartController.addCouponToCart));
 router.delete(
-  "/coupon",
+  "/delete",
   expressAsyncHandler(CartController.removeCouponFromCart)
 );
 module.exports = {
