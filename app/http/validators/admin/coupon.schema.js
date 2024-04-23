@@ -22,7 +22,6 @@ const addCouponSchema = Joi.object({
     .required()
     .error(createHttpError.BadRequest("ظرفیت کد تخفیف را به درستی وارد کنید")),
   productIds: Joi.array()
-    .items(Joi.string().required().regex(MongoIDPattern))
     .error(createHttpError.BadRequest("شناسه محصول صحیح نمی باشد")),
 });
 

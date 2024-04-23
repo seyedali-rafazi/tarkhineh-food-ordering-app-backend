@@ -29,10 +29,9 @@ async function setAccessToken(res, user) {
     maxAge: 1000 * 60 * 60 * 24 * 1, // would expire after 1 days
     httpOnly: true, // The cookie only accessible by the web server
     signed: true, // Indicates if the cookie should be signed
-    sameSite: "Lax",
-    secure: process.env.NODE_ENV === "development" ? false : true,
-    domain:
-      process.env.NODE_ENV === "development" ? "localhost" : ".fronthooks.ir",
+    sameSite: "None", // Updated to 'None'
+    secure: process.env.NODE_ENV === "production", // Set secure to true in production
+
   };
   res.cookie(
     "accessToken",
@@ -46,10 +45,8 @@ async function setRefreshToken(res, user) {
     maxAge: 1000 * 60 * 60 * 24 * 365, // would expire after 1 year
     httpOnly: true, // The cookie only accessible by the web server
     signed: true, // Indicates if the cookie should be signed
-    sameSite: "Lax",
-    secure: process.env.NODE_ENV === "development" ? false : true,
-    domain:
-      process.env.NODE_ENV === "development" ? "localhost" : ".fronthooks.ir",
+    sameSite: "None", // Updated to 'None'
+    secure: process.env.NODE_ENV === "production", // Set secure to true in production
   };
   res.cookie(
     "refreshToken",
@@ -145,12 +142,12 @@ async function getUserCartDetail(userId) {
           _id: 1,
           slug: 1,
           title: 1,
-          description:1,
+          description: 1,
           icon: 1,
           discount: 1,
           price: 1,
           offPrice: 1,
-          discount:1,
+          discount: 1,
           imageLink: 1,
         },
       },
@@ -310,20 +307,32 @@ async function getUserCartDetail(userId) {
           //     },
           //   },
           // },
-          // totalPrice: {
-          //   $sum: {
-          //     $map: {
-          //       input: "$discountDetail.newProductDetail",
-          //       as: "product",
-          //       in: {
-          //         $multiply: [
-          //           { $toDouble: { $ifNull: ["$$product.offPrice", "0"] } },
-          //           { $toDouble: { $ifNull: ["$$product.quantity", "0"] } },
-          //         ],
-          //       },
-          //     },
-          //   },
-          // },
+          totalPrice: {
+            $sum: {
+              $map: {
+                input: "$discountDetail.newProductDetail",
+                as: "product",
+                in: {
+                  $multiply: [
+                    {
+                      $convert: {
+                        input: { $ifNull: ["$$product.offPrice", "0"] },
+                        to: "double",
+                        onError: 0,
+                      },
+                    },
+                    {
+                      $convert: {
+                        input: { $ifNull: ["$$product.quantity", "0"] },
+                        to: "double",
+                        onError: 0,
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
           // totalGrossPrice: {
           //   $sum: {
           //     $map: {
@@ -347,9 +356,10 @@ async function getUserCartDetail(userId) {
                   $cond: {
                     if: { $ne: ["$$product.offPrice", 0] }, // Check if offPrice is not zero
                     then: "$$product.offPrice", // If not zero, use offPrice
-                    else: "$$product.price" // If zero, use regular price
-                  }
-                },                product: "$$product._id",
+                    else: "$$product.price", // If zero, use regular price
+                  },
+                },
+                product: "$$product._id",
               },
             },
           },

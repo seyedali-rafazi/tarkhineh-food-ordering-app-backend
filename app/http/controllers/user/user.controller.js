@@ -268,11 +268,9 @@ class userAuthController extends Controller {
       expires: Date.now(),
       httpOnly: true,
       signed: true,
-      sameSite: "Lax",
-      secure: true,
+      sameSite: "None", // Updated to 'None'
+      secure: process.env.NODE_ENV === "production", // Set secure to true in production
       path: "/",
-      domain:
-        process.env.NODE_ENV === "development" ? "localhost" : ".fronthooks.ir",
     };
     res.cookie("accessToken", null, cookieOptions);
     res.cookie("refreshToken", null, cookieOptions);
