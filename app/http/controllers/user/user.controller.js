@@ -67,7 +67,7 @@ class userAuthController extends Controller {
       throw createError.Unauthorized("رمز عبور نامعتبر است.");
     await setAccessToken(res, user);
     await setRefreshToken(res, user);
-    let WELLCOME_MESSAGE = `کد تایید شد، به ترخینه خوش آمدید`;
+    let WELLCOME_MESSAGE = `کد تایید شد، به ترخینه  خوش آمدید`;
     if (!user.isActive)
       WELLCOME_MESSAGE = `کد تایید شد، لطفا اطلاعات خود را تکمیل کنید`;
 
@@ -80,12 +80,44 @@ class userAuthController extends Controller {
     });
   }
 
+  // async checkOtp(req, res) {
+  //   const { phoneNumber, password } = req.body;
+
+  //   if (!phoneNumber || !password)
+  //     throw createError.BadRequest(
+  //       "شماره موبایل و رمز عبور معتبر را وارد کنید"
+  //     );
+
+  //   const user = await UserModel.findOne({ phoneNumber });
+  //   if (!user)
+  //     throw createError.Unauthorized("کاربری با این شماره موبایل یافت نشد.");
+
+  //   const isPasswordValid = await bcrypt.compare(password, user.password);
+  //   if (!isPasswordValid)
+  //     throw createError.Unauthorized("رمز عبور نامعتبر است.");
+
+  //   // Generate new access token and refresh token
+  //   await setAccessToken(res, user);
+  //   await setRefreshToken(res, user);
+  //   let WELLCOME_MESSAGE = `کد تایید شد، به فرانت هوکس خوش آمدید`;
+  //   if (!user.isActive)
+  //     WELLCOME_MESSAGE = `کد تایید شد، لطفا اطلاعات خود را تکمیل کنید`;
+
+  //   return res.status(HttpStatus.OK).json({
+  //     statusCode: HttpStatus.OK,
+  //     data: {
+  //       message: WELLCOME_MESSAGE,
+  //       user,
+  //     },
+  //   });
+  // }
 
   async saveUser(phoneNumber, password) {
     return await UserModel.create({
       phoneNumber,
       password, // Save hashed password
       role: ROLES.USER,
+      isActive: true,
     });
   }
 
