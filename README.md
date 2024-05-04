@@ -36,4 +36,4 @@ This is the backend application for a food ordering platform, built using Node.j
 
 ## Contact
 
-- This project uses the `ChevronDownIcon` from the [Heroicons](https://heroicons.com/) library.
+For any questions or inquiries, please contact the project maintainers at [seyedalirafazi80@gmail.com].
