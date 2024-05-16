@@ -47,7 +47,7 @@ class userAuthController extends Controller {
       phoneNumber = phoneNumber.trim();
       this.phoneNumber = phoneNumber;
 
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const hashedPassword = await bcrypt.hash();
       this.hashedPassword = hashedPassword;
       const user = await this.saveUser(phoneNumber, hashedPassword);
       await setAccessToken(res, user);
@@ -83,7 +83,7 @@ class userAuthController extends Controller {
   // async checkOtp(req, res) {
   //   const { phoneNumber, password } = req.body;
 
-  //   if (!phoneNumber || !password)
+  //   if (!phoneNumber || !)
   //     throw createError.BadRequest(
   //       "شماره موبایل و رمز عبور معتبر را وارد کنید"
   //     );

@@ -23,11 +23,7 @@ router.post(
   expressAsyncHandler(ProductController.likeProduct)
 );
 
-router.get(
-  "/:id",
-  decideAuthMiddleware,
-  expressAsyncHandler(ProductController.getProductById)
-);
+router.get("/:id", expressAsyncHandler(ProductController.getProductById));
 module.exports = {
   productRoutes: router,
 };
