@@ -1,2 +1,6 @@
 const Application = require("./app/server.js");
-new Application();
+
+const app = new Application();
+app.startServer();
+
+module.exports = app.getApp();
