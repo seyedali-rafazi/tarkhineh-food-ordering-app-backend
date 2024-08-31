@@ -40,6 +40,10 @@ class userAuthController extends Controller {
         "شماره موبایل و رمز عبور معتبر را وارد کنید"
       );
 
+    phoneNumber = phoneNumber.trim();
+    this.phoneNumber = phoneNumber;
+    this.code = generateRandomNumber(6);
+
     const user = await UserModel.findOne({ phoneNumber });
     if (!user) {
       // Create User if does not exist
@@ -47,12 +51,12 @@ class userAuthController extends Controller {
       phoneNumber = phoneNumber.trim();
       this.phoneNumber = phoneNumber;
 
-      const hashedPassword = await bcrypt.hash();
+      const hashedPassword = await bcrypt.hash(password, 10);
       this.hashedPassword = hashedPassword;
       const user = await this.saveUser(phoneNumber, hashedPassword);
       await setAccessToken(res, user);
       await setRefreshToken(res, user);
-      let WELLCOME_MESSAGE = `  ثبت نام انجام شد ، به ترخینه  خوش آمدید  `;
+      let WELLCOME_MESSAGE = `ثبت نام موفقیت امیز بود خوش امدید `;
 
       return res.status(HttpStatus.OK).json({
         statusCode: HttpStatus.OK,
@@ -63,13 +67,11 @@ class userAuthController extends Controller {
       });
     }
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid)
-      throw createError.Unauthorized("رمز عبور نامعتبر است.");
+    if (!isPasswordValid) throw createError.Unauthorized("Incorrect password");
     await setAccessToken(res, user);
     await setRefreshToken(res, user);
-    let WELLCOME_MESSAGE = `کد تایید شد، به ترخینه  خوش آمدید`;
-    if (!user.isActive)
-      WELLCOME_MESSAGE = `کد تایید شد، لطفا اطلاعات خود را تکمیل کنید`;
+    let WELLCOME_MESSAGE = `Welcome to Morent`;
+    if (!user.isActive) WELLCOME_MESSAGE = `Please complete your profile`;
 
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,
@@ -80,44 +82,12 @@ class userAuthController extends Controller {
     });
   }
 
-  // async checkOtp(req, res) {
-  //   const { phoneNumber, password } = req.body;
-
-  //   if (!phoneNumber || !)
-  //     throw createError.BadRequest(
-  //       "شماره موبایل و رمز عبور معتبر را وارد کنید"
-  //     );
-
-  //   const user = await UserModel.findOne({ phoneNumber });
-  //   if (!user)
-  //     throw createError.Unauthorized("کاربری با این شماره موبایل یافت نشد.");
-
-  //   const isPasswordValid = await bcrypt.compare(password, user.password);
-  //   if (!isPasswordValid)
-  //     throw createError.Unauthorized("رمز عبور نامعتبر است.");
-
-  //   // Generate new access token and refresh token
-  //   await setAccessToken(res, user);
-  //   await setRefreshToken(res, user);
-  //   let WELLCOME_MESSAGE = `کد تایید شد، به فرانت هوکس خوش آمدید`;
-  //   if (!user.isActive)
-  //     WELLCOME_MESSAGE = `کد تایید شد، لطفا اطلاعات خود را تکمیل کنید`;
-
-  //   return res.status(HttpStatus.OK).json({
-  //     statusCode: HttpStatus.OK,
-  //     data: {
-  //       message: WELLCOME_MESSAGE,
-  //       user,
-  //     },
-  //   });
-  // }
-
   async saveUser(phoneNumber, password) {
     return await UserModel.create({
       phoneNumber,
       password, // Save hashed password
       role: ROLES.USER,
-      isActive: true,
+      isActive: false,
     });
   }
 
@@ -161,7 +131,7 @@ class userAuthController extends Controller {
     return res.status(HttpStatus.OK).send({
       statusCode: HttpStatus.OK,
       data: {
-        message: "اطلاعات شما با موفقیت تکمیل شد",
+        message: "Your information has been successfully completed",
         user: updatedUser,
       },
     });
@@ -247,9 +217,9 @@ class userAuthController extends Controller {
 
     let message;
     if (user.favoriteProduct.includes(productId)) {
-      message = "به لیست مورد علاقتون اضافه شد";
+      message = "Added to you favourite list";
     } else {
-      message = "از لیست مورد علاقه شما خارج شد";
+      message = "Remove from your favourite list";
     }
 
     return res.status(HttpStatus.OK).json({
